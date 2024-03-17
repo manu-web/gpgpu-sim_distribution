@@ -4217,9 +4217,20 @@ bool opndcoll_rfu_t::writeback(warp_inst_t &inst) {
 }
 
 void opndcoll_rfu_t::dispatch_ready_cu() {
+  std::vector<unsigned> cnt;
+  std::vector<address_type> cu_pcs;
+
+  //Non-free operand collector units
+  for(unsigned i=0;i<m_cu.size();i++){
+      if(m_cu[i]->is_free()!=0){
+          cu_pcs.push_back(m_cu[i]->get_pc());
+      }
+  }
+
   for (unsigned p = 0; p < m_dispatch_units.size(); ++p) {
     dispatch_unit_t &du = m_dispatch_units[p];
     collector_unit_t *cu = du.find_ready();
+
     if (cu) {
       for (unsigned i = 0; i < (cu->get_num_operands() - cu->get_num_regs());
            i++) {
@@ -4242,7 +4253,27 @@ void opndcoll_rfu_t::dispatch_ready_cu() {
         }
       }
       cu->dispatch();
+      cnt.push_back(cu->get_pc());
     }
+  }
+  if(cnt.size() > 0){//This is a committing cycle
+      for(unsigned i=0;i<cnt.size();i++){
+          std::string str_op_co = "1 ";
+          //str_op_co += std::to_string(m_stats->shader_cycles[m_shader->get_sid()]) + " " + std::to_string(cu_pcs[cnt[i]]) + " " + std::to_string(m_shader->get_sid()) + " " + std::to_string(1.0/cnt.size());
+          str_op_co += std::to_string(cnt[i]) + " " + std::to_string(m_shader->get_sid()) + " " + std::to_string(1.0/cnt.size());
+          fprintf(stdout,"%s\n",str_op_co.c_str());
+      }
+  }else if(cu_pcs.size()>0){//This is a stall cycle
+      for(unsigned i=0;i<cu_pcs.size();i++){
+          std::string str_op_co = "0 ";
+          //str_op_co += std::to_string(m_stats->shader_cycles[m_shader->get_sid()]) + " " + std::to_string(cu_pcs[cnt[i]]) + " " + std::to_string(m_shader->get_sid()) + " " + std::to_string(1.0/cu_pcs.size());
+          str_op_co += std::to_string(cu_pcs[i]) + " " + std::to_string(m_shader->get_sid()) + " " + std::to_string(1.0/cu_pcs.size());
+          fprintf(stdout,"%s\n",str_op_co.c_str());
+      }
+  }else{
+      std::string str_op_co = "2 ";
+      //str_op_co += std::to_string(m_stats->shader_cycles[m_shader->get_sid()]);
+      fprintf(stdout,"%s\n",str_op_co.c_str());
   }
 }
 

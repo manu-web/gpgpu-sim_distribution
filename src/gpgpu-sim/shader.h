@@ -960,6 +960,7 @@ class opndcoll_rfu_t {  // operand collector based register file unit
     void collect_operand(unsigned op) { m_not_ready.reset(op); }
     unsigned get_num_operands() const { return m_warp->get_num_operands(); }
     unsigned get_num_regs() const { return m_warp->get_num_regs(); }
+    unsigned get_pc() const { return m_warp->get_pc(); }
     void dispatch();
     bool is_free() { return m_free; }
 
@@ -1813,6 +1814,8 @@ struct shader_core_stats_pod {
   unsigned *gpgpu_n_shmem_bank_access;
   long *n_simt_to_mem;  // Interconnect power stats
   long *n_mem_to_simt;
+
+  //vector<string> op_co_status;
 };
 
 class shader_core_stats : public shader_core_stats_pod {
