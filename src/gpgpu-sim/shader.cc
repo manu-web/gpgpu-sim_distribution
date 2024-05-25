@@ -915,6 +915,7 @@ void shader_core_ctx::decode() {
   }
 }
 
+//Manu : Fetch is dependent on the status of icache, so it can be used to find 
 void shader_core_ctx::fetch() {
   if (!m_inst_fetch_buffer.m_valid) {
     if (m_L1I->access_ready()) {
@@ -1920,6 +1921,8 @@ void shader_core_ctx::writeback() {
 
   warp_inst_t **preg = m_pipeline_reg[EX_WB].get_ready();
   warp_inst_t *pipe_reg = (preg == NULL) ? NULL : *preg;
+  //Manu : Add a counter for the number of writebacks
+  //Manu : Maximum number of writebacks is given in the variable max_committed thread instruction
   while (preg and !pipe_reg->empty()) {
     /*
      * Right now, the writeback stage drains all waiting instructions
@@ -2293,7 +2296,7 @@ bool ldst_unit::memory_cycle(warp_inst_t &inst,
 }
 
 bool ldst_unit::response_buffer_full() const {
-  return m_response_fifo.size() >= m_config->ldst_unit_response_queue_size;
+  return m_response_fifo.size() >= m_config->ldst_unit_response_queue_size;//Manu : For LD/ST unit size
 }
 
 void ldst_unit::fill(mem_fetch *mf) {
@@ -3625,6 +3628,7 @@ void shader_core_ctx::cycle() {
   execute();
   read_operands();
   issue();
+  dump_info();
   for (unsigned int i = 0; i < m_config->inst_fetch_throughput; ++i) {
     decode();
     fetch();
@@ -4082,6 +4086,7 @@ void shd_warp_t::print(FILE *fout) const {
   }
 }
 
+//Manu : Can use this for ibuffer 
 void shd_warp_t::print_ibuffer(FILE *fout) const {
   fprintf(fout, "  ibuffer[%2u] : ", m_warp_id);
   for (unsigned i = 0; i < IBUFFER_SIZE; i++) {
